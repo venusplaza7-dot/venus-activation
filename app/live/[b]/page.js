@@ -1,21 +1,16 @@
-// ACTIVATED SITE - Customer gets after $497
-export default function LiveSite({ params, searchParams }) {
-  const b = params.b; // arizonanativeroofing.com
-  const old = searchParams.old; // houstonroofing2008.biz
+export default function Page({params, searchParams}) {
+  const business = params.b || 'arizonanativeroofing.com'
+  const old = searchParams.old || 'houstonroofing2008.biz'
+  const conf = searchParams.conf || 'VENUS-2026-HOU-497'
   
   return (
-    <div className="bg-black text-white">
-      <h1>ARIZONANATIVEROOFING.COM - HOUSTON ROOFING 2026</h1>
-      <p>Est 2008 • 1000+ Roofs • Licensed • From {old}</p>
-      
-      {/* 5 AI TOOLS LIVE - with your OpenAI key */}
-      <div>01 AI BOOKING CHAT - REAL GPT-4</div>
-      <div>02 AI QUOTE - REAL Vision AI</div>
-      <div>03 AI MISSED-CALL TEXT</div>
-      <div>04 AI REVIEW ENGINE</div>
-      <div>05 AI UPSELL + VENUS OS</div>
-      
-      <p>CONF# {searchParams.conf} - Activated</p>
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="bg-[#D4AF37] text-black text-center py-2">
+        ACTIVATED • CONF# {conf} • Live • {old} → {business}
+      </div>
+      <h1 className="text-6xl p-10">{business} - HOUSTON ROOFING 2026 - EST 2008</h1>
+      <p className="p-10">5 AI Tools Live: Booking Chat, Quote Estimator, Missed-Call Text, Review Engine, Upsell + Venus OS - Working with OpenAI key</p>
+      <button className="m-10 bg-[#D4AF37] text-black px-6 py-3">Start AI Inspection - $497 Activated</button>
     </div>
   )
 }
