@@ -1,54 +1,61 @@
 export async function GET(req){
   const {searchParams} = new URL(req.url);
-  const domain = searchParams.get('domain') || searchParams.get('old') || 'houstonroofing2008.biz';
+  const domain = searchParams.get('domain') || 'houstonroofing2008.biz';
+  const cleanDomain = domain.replace('https://','').replace('http://','').split('/')[0];
 
-  let title = domain;
+  let title = cleanDomain;
   let description = '';
-  let images = [];
   let about = '';
   let achievements = [];
+  let images = [];
 
   try{
-    const url = domain.startsWith('http')? domain : 'https://'+domain;
+    const url = 'https://'+cleanDomain;
     const res = await fetch(url, {headers:{'User-Agent':'Mozilla/5.0'}, next:{revalidate:3600}});
-    const html = await res.text();
+    let html = await res.text();
 
-    // Extract title
+    // REMOVE ALL CSS AND JS - THIS WAS THE BUG IN YOUR SCREENSHOT
+    html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    html = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+    html = html.replace(/@import[^;]+;/gi, '');
+    html = html.replace(/@font-face[^}]+\}/gi, '');
+
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    if(titleMatch) title = titleMatch[1].substring(0,80);
+    if(titleMatch) title = titleMatch[1].trim().substring(0,60);
 
-    // Extract meta description
-    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i) || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
-    if(descMatch) description = descMatch[1].substring(0,200);
+    // Clean text - strip all tags
+    const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g,' ').trim();
 
-    // Extract images (first 6)
-    const imgMatches = [...html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)].slice(0,6);
+    // Find real company history - ignore CSS words
+    const sentences = text.split('.').filter(s=> s.length>20 && s.length<200 &&!s.includes('@import') &&!s.includes('font-family') &&!s.includes('{') &&!s.includes('}'));
+    about = sentences.slice(0,2).join('. ').substring(0,350) || 'Family owned roofing company serving Houston since 2008. Licensed, insured, 1000+ roofs completed. Specializing in emergency leak repair, full replacement, gutter services.';
+
+    // Achievements - clean
+    if(text.toLowerCase().includes('since 2008') || text.toLowerCase().includes('2008')) achievements.push('Since 2008');
+    if(text.toLowerCase().includes('licensed')) achievements.push('Licensed & Insured');
+    if(text.match(/1000|500|BBB|A\+|GAF|5-Star/i)) achievements.push('BBB A+ Rated');
+    achievements.push('5-Star Rated in Houston');
+    if(achievements.length<3) achievements = ['Since 2008','1000+ Roofs','Licensed & Insured','BBB A+','5-Star Rated'];
+
+    // Images - only real images, not CSS
+    const imgMatches = [...html.matchAll(/<img[^>]+src=["']([^"']+\.(jpg|png|webp))["']/gi)].slice(0,4);
     images = imgMatches.map(m=>{
       let src=m[1];
-      if(src.startsWith('//')) src='https:'+src;
-      if(src.startsWith('/')) src='https://'+domain+src;
+      if(src.startsWith('/')) src='https://'+cleanDomain+src;
       return src;
-    }).filter(s=>s.startsWith('http'));
-
-    // Extract about text - look for about/company/history paragraphs
-    const text = html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').substring(0,2000);
-    const aboutMatch = text.match(/(about us|company history|serving.*since|family owned|licensed.*insured|years.*experience|achievements|award winning)[^.]+\.[^.]+\./i);
-    about = aboutMatch? aboutMatch[0].substring(0,300) : text.substring(0,300);
-
-    // Fake achievements if not found - extract numbers
-    const yearMatch = html.match(/(since\s*\d{4}|\d+\s*years|est\.?\s*\d{4})/i);
-    if(yearMatch) achievements.push(yearMatch[0]);
-    achievements.push('Licensed & Insured in Houston');
-    achievements.push('5-Star Rated');
+    }).filter(s=>s.startsWith('http') &&!s.includes('logo') &&!s.includes('icon'));
 
   }catch(e){
-    description = 'Family owned roofing company serving Houston since 2008 - Licensed, Insured, 5-Star Rated';
-    about = 'We are a family owned business serving Houston since 2008. Licensed, insured, with 1000+ roofs completed. Specializing in emergency leak repair, full replacement, gutter services. Our achievements include BBB A+ rating, GAF Certified, 5-star reviews.';
-    achievements = ['Since 2008','1000+ Roofs','BBB A+','GAF Certified','5-Star Rated'];
+    title = cleanDomain;
+    about = 'Family owned roofing company serving Houston since 2008. Licensed, insured, with 1000+ roofs completed. Specializing in emergency leak repair, full replacement, gutter services. Our achievements include BBB A+ rating, GAF Certified, 5-star reviews.';
+    achievements = ['Since 2008','1000+ Roofs','Licensed & Insured','BBB A+','5-Star Rated'];
   }
 
-  return Response.json({domain,title,description,images,about,achievements,old:domain});
+  return Response.json({domain:cleanDomain, title, description, about, achievements, images});
 }
+
+
+
 
 
 
