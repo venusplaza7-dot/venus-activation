@@ -1,35 +1,55 @@
 "use client";
 import { useState } from "react";
-import { FACADE_CONFIG } from "@/lib/facades";
+import { FACADE_CONFIG } from "../../lib/facades.js";
 
 export default function ActivationHQ() {
-  const [link,setLink]=useState(""); const [step,setStep]=useState(0); const [data,setData]=useState(null); const [qaP,setQaP]=useState(0);
-  async function activate(){
-    if(!link) return; setStep(1);
-    setTimeout(()=>setStep(2),700); setTimeout(()=>setStep(3),1400);
-    setTimeout(async()=>{
-      try{
-        const r=await fetch("/api/activate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({link})});
-        const j=await r.json(); setData(j); setStep(4);
-        let p=0; const iv=setInterval(()=>{p++; setQaP(p); if(p>=j.qa.length){clearInterval(iv); setStep(5);}},150);
-      }catch(e){ alert("Push this code to GitHub first, then test"); }
-    },2100);
+  const [link, setLink] = useState("");
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState(null);
+  const [qaP, setQaP] = useState(0);
+
+  async function activate() {
+    if (!link) return;
+    setStep(1);
+    setTimeout(() => setStep(2), 700);
+    setTimeout(() => setStep(3), 1400);
+    setTimeout(async () => {
+      try {
+        const r = await fetch("/api/activate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ link }),
+        });
+        const j = await r.json();
+        setData(j);
+        setStep(4);
+        let p = 0;
+        const iv = setInterval(() => {
+          p++;
+          setQaP(p);
+          if (p >= j.qa.length) {
+            clearInterval(iv);
+            setStep(5);
+          }
+        }, 150);
+      } catch (e) {
+        alert("Push code to GitHub first");
+      }
+    }, 2100);
   }
+
   return (
-    <div style={{maxWidth:700,margin:"0 auto",padding:16}}>
-      <h1 style={{textAlign:"center"}}>Venus Activation HQ</h1>
-      <div style={{display:"flex",gap:8,border:"1px solid #ddd",borderRadius:12,padding:12}}>
-        <input value={link} onChange={e=>setLink(e.target.value)} placeholder="Paste customer link https://.../o/domain?niche=roofing" style={{flex:1,padding:10,borderRadius:8,border:"1px solid #ddd"}} />
-        <button onClick={activate} style={{background:"#000",color:"#fff",padding:"10px 16px",borderRadius:8}}>ACTIVATE → Boom!</button>
+    <div style={{ maxWidth: 700, margin: "0 auto", padding: 16 }}>
+      <h1 style={{ textAlign: "center" }}>Venus Activation HQ</h1>
+      <div style={{ display: "flex", gap: 8, border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
+        <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Paste customer link" style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ddd" }} />
+        <button onClick={activate} style={{ background: "#000", color: "#fff", padding: "10px 16px", borderRadius: 8 }}>ACTIVATE</button>
       </div>
-      {step>=1&&<div style={{marginTop:12,border:"1px solid #eee",borderRadius:12,padding:12}}><b>1 Parsing Link...</b> ✓ done<div>{data?.domain||link}</div><div>Niche: {data?.niche||"roofing"}</div></div>}
-      {step>=2&&<div style={{marginTop:8,border:"1px solid #eee",borderRadius:12,padding:12}}><b>2 Scraping Real Info...</b> ✓ done<div>{data?.realInfo?.name} ★ {data?.realInfo?.rating}</div></div>}
-      {step>=3&&<div style={{marginTop:8,border:"1px solid #eee",borderRadius:12,padding:12}}><b>3 Building Facade {data?.facade?.name}</b> ✓ built{data?.facade?.tools?.map(t=><div key={t.id} style={{background:"#f0fdf4",padding:6,marginTop:4,borderRadius:6}}>{t.name} ✓</div>)}</div>}
-      {step>=4&&<div style={{marginTop:8,border:"1px solid #eee",borderRadius:12,padding:12}}><b>4 QA Test {qaP}/{data?.qa?.length}</b><div style={{height:6,background:"#eee",borderRadius:6,marginTop:6}}><div style={{width:`${(qaP/(data?.qa?.length||1))*100}%`,height:"100%",background:"#16a34a"}}></div></div>{data?.qa?.slice(0,qaP).map((q,i)=><div key={i} style={{fontSize:12,display:"flex",justifyContent:"space-between",borderBottom:"1px solid #f5f5f5"}}><span>{q.label}</span><span style={{color:"green"}}>✓</span></div>)}</div>}
-      {step===5&&data?.allPass&&<div style={{marginTop:12,background:"#000",color:"#fff",borderRadius:16,padding:16}}><div>{data.liveUrl} <span style={{color:"#4ade80"}}>is LIVE ✓</span></div><div style={{display:"flex",gap:8,marginTop:10}}><button onClick={()=>navigator.clipboard.writeText(data.liveUrl)} style={{background:"#fff",color:"#000",borderRadius:8,padding:8,flex:1}}>Copy</button><button onClick={()=>window.open(data.liveUrl)} style={{background:"#c19a4a",color:"#000",borderRadius:8,padding:8,flex:1}}>Open</button></div><button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent("Your site LIVE: "+data.liveUrl+" "+data.ticket)}`)} style={{marginTop:8,background:"#22c55e",width:"100%",padding:10,borderRadius:8}}>WhatsApp to Owner — {data.ticket}</button></div>}
+      {step >= 1 && <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 12 }}><b>1 Parsing Link...</b> done<div>{data?.domain || link}</div><div>Niche: {data?.niche || "roofing"}</div></div>}
+      {step >= 2 && <div style={{ marginTop: 8, border: "1px solid #eee", borderRadius: 12, padding: 12 }}><b>2 Scraping Real Info...</b> done<div>{data?.realInfo?.name} star {data?.realInfo?.rating}</div></div>}
+      {step >= 3 && <div style={{ marginTop: 8, border: "1px solid #eee", borderRadius: 12, padding: 12 }}><b>3 Building Facade</b> built{data?.facade?.tools?.map((t) => <div key={t.id} style={{ background: "#f0fdf4", padding: 6, marginTop: 4, borderRadius: 6 }}>{t.name}</div>)}</div>}
+      {step >= 4 && <div style={{ marginTop: 8, border: "1px solid #eee", borderRadius: 12, padding: 12 }}><b>4 QA Test {qaP}/{data?.qa?.length}</b><div style={{ height: 6, background: "#eee", borderRadius: 6, marginTop: 6 }}><div style={{ width: (qaP / (data?.qa?.length || 1)) * 100 + "%", height: "100%", background: "#16a34a" }}></div></div>{data?.qa?.slice(0, qaP).map((q, i) => <div key={i} style={{ fontSize: 12, display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f5f5f5" }}><span>{q.label}</span><span style={{ color: "green" }}>ok</span></div>)}</div>}
+      {step === 5 && data?.allPass && <div style={{ marginTop: 12, background: "#000", color: "#fff", borderRadius: 16, padding: 16 }}><div>{data.liveUrl} is LIVE</div><div style={{ display: "flex", gap: 8, marginTop: 10 }}><button onClick={() => navigator.clipboard.writeText(data.liveUrl)} style={{ background: "#fff", color: "#000", borderRadius: 8, padding: 8, flex: 1 }}>Copy</button><button onClick={() => window.open(data.liveUrl)} style={{ background: "#c19a4a", color: "#000", borderRadius: 8, padding: 8, flex: 1 }}>Open</button></div><button onClick={() => window.open("https://wa.me/?text=" + encodeURIComponent("Your site LIVE: " + data.liveUrl + " " + data.ticket))} style={{ marginTop: 8, background: "#22c55e", width: "100%", padding: 10, borderRadius: 8 }}>WhatsApp Owner {data.ticket}</button></div>}
     </div>
   );
 }
-
-
-
