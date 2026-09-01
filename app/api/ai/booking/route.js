@@ -1,25 +1,28 @@
-import { NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
-});
-
 export async function POST(req){
-  const body = await req.json();
-  const { message, domain, niche, state } = body;
-
+  const { message, domain, niche, state } = await req.json();
   try{
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: `You are receptionist for ${niche} business ${domain} in ${state}. Services: dentist cleaning $99-$250, plumber drain $99-$350, roofing repair $350-$2k. Reply under 40 words, offer 3 slots 9am,11am,2pm tomorrow.` },
-        { role: "user", content: message }
-      ]
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: `You are receptionist for ${niche} business ${domain} in ${state}. Be helpful, offer slots 9am,11am,2pm tomorrow. Under 40 words.` },
+          { role: "user", content: message }
+        ],
+        max_tokens: 120
+      })
     });
-    return NextResponse.json({ reply: completion.choices[0].message.content });
+    const data = await res.json();
+    return Response.json({ reply: data.choices?.[0]?.message?.content || `Thanks for contacting ${domain}! Available tomorrow 9am,11am,2pm. Which works?` });
   }catch(e){
-    return NextResponse.json({ reply: `Thanks for contacting ${domain}! For ${niche} in ${state}: Available tomorrow 9am, 11am, 2pm. Which works? (AI)` });
+    return Response.json({ reply: `Thanks for contacting ${domain} in ${state}! Available tomorrow 9am,11am,2pm for ${niche}.` });
   }
 }
+
+
+
 
