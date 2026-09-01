@@ -1,5 +1,5 @@
 export async function POST(req){
-  const { message, domain, niche, state } = await req.json();
+  const { message, domain, niche, state, phone } = await req.json();
   try{
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -10,16 +10,25 @@ export async function POST(req){
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: `You are receptionist for ${niche} business ${domain} in ${state}. Be helpful, offer slots 9am,11am,2pm tomorrow. Under 40 words.` },
+          {
+            role: "system",
+            content: `You are AI receptionist for ${niche} business ${domain} in ${state}. Customer WhatsApp: ${phone}.
+            RULE 1: FIRST message you MUST ask "What's your name?" if they didn't give name.
+            RULE 2: Then ask about their ${niche} need - if dentist ask pain 1-10 and insurance, if plumber ask leak urgency, if roofing ask storm damage.
+            RULE 3: Offer slots tomorrow 9am, 11am, 2pm.
+            RULE 4: Keep under 40 words, friendly, use name if known.
+            Prices: dentist cleaning $99-$250, plumber drain $99-$350, roofing repair $350-$2k.`
+          },
           { role: "user", content: message }
         ],
         max_tokens: 120
       })
     });
     const data = await res.json();
-    return Response.json({ reply: data.choices?.[0]?.message?.content || `Thanks for contacting ${domain}! Available tomorrow 9am,11am,2pm. Which works?` });
+    const reply = data.choices?.[0]?.message?.content || `Hi! What's your name? Thanks for contacting ${domain} in ${state} - available tomorrow 9am, 11am, 2pm.`;
+    return Response.json({ reply });
   }catch(e){
-    return Response.json({ reply: `Thanks for contacting ${domain} in ${state}! Available tomorrow 9am,11am,2pm for ${niche}.` });
+    return Response.json({ reply: `Hi! What's your name? Thanks for contacting ${domain}! Available tomorrow 9am, 11am, 2pm for ${niche} in ${state}.` });
   }
 }
 
