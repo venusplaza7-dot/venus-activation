@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 export default function Page(){
   const {b}=useParams();
-  const bizRaw=b; const biz=Array.isArray(bizRaw)?bizRaw[bizRaw.length-1]:bizRaw||"arizonanativeroofing.com";
+  const bizRaw=b; const biz=Array.isArray(bizRaw)?bizRaw[bizRaw.length-1]:bizRaw||"arizonanativerooFing.com";
   const [open,setOpen]=useState(null); const [chat,setChat]=useState(false); const [typing,setTyping]=useState(false);
   const [msgs,setMsgs]=useState([{role:"ai",text:"Hey! I'm Sarah from "+biz+" 👋 Real person here. How's your roof?"}]);
   const [inp,setInp]=useState(""); const [sq,setSq]=useState(2400);
