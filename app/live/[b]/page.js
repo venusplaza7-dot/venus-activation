@@ -1,125 +1,96 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
-export default function BusinessSystem(){
+export default function LuxurySellable(){
   const params=useParams(); const sp=useSearchParams();
   const biz=params?.b||"arizonanativeroofing.com";
   const conf=sp.get("conf")||"VENUS-2026-HOU-497";
   const [open,setOpen]=useState(null);
-  const [msgs,setMsgs]=useState([{role:"ai", text:`Hi! 👋 VENUS AI for ${biz}\n\nHow can I assist you today?\n\nI can run:\n🚁 Drone Scan\n📸 Damage Photo AI\n💰 Instant Quote\n🌩️ Weather Radar\n📜 Warranty\n\nJust ask or tap a tool. If you need help, I'll create a ticket with your phone number and owner will get notified + you get WhatsApp!`}]);
-  const [input,setInput]=useState("");
-  const [phoneMode,setPhoneMode]=useState(false);
-  const [lastRequest,setLastRequest]=useState("");
-  const [ticket,setTicket]=useState(null);
-  const chatRef=useRef(null);
+  const [chatOpen,setChatOpen]=useState(false);
+  const [msgs,setMsgs]=useState([{role:"ai", text:`Welcome to ${biz} 👋\nI'm VENUS AI. I can help with drone measurement, damage photo check, instant quote, hail risk, warranty. What do you need?`}]);
+  const [input][setInput]=useState("");
+  const [sqft][setSqft]=useState(2400);
+  const ref=useRef(null);
+  useEffect(()=>{ref.current?.scrollTo(0,9999)},[msgs]);
 
-  useEffect(()=>{ chatRef.current?.scrollTo(0,99999); },[msgs]);
-
-  const sendTicket = async (phone, reqText)=>{
-    const res = await fetch("/api/ticket",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({phone, request:reqText, biz, conf})});
-    const data = await res.json();
-    setTicket(data.ticket);
-    setMsgs(m=>[...m,{role:"ai", text:data.message}]);
-    setPhoneMode(false);
-  };
-
-  const chatAI = async (q)=>{
-    const history = msgs.map(m=>({role:m.role==="user"?"user":"assistant", content:m.text}));
+  const callOpenAI = async (q)=>{
     try{
-      const res = await fetch("/api/chat",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({message:q, biz, history})});
-      const data = await res.json();
-      return data.reply;
-    }catch{ return `I'm here! For ${biz}, I have drone scan 2,400 sq ft, damage AI $1,240, quote $12,480, weather 12%, warranty 2033. Tell me your need and your phone for ticket ${conf}`; }
+      const r=await fetch("/api/chat",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({message:q, biz, history:msgs.map(m=>({role:m.role==="user"?"user":"assistant", content:m.text}))})});
+      const d=await r.json(); return d.reply;
+    }catch{ return "I'm here to help! Tap any tool card above to see how it works, or tell me your roof size / damage / quote needs and I'll guide you."; }
   };
 
-  const send = async ()=>{
-    if(!input.trim()) return;
-    const q=input.trim(); setInput(""); setMsgs(m=>[...m,{role:"user", text:q}]);
-
-    // PHONE DETECTED
-    const phoneMatch = q.match(/(\+?\d{10,15})/);
-    if(phoneMode || phoneMatch){
-      const phone = phoneMatch?.[0] || q;
-      await sendTicket(phone, lastRequest||"General assistance requested");
-      return;
+  const send=async()=>{
+    if(!input.trim()) return; const q=input; setInput(""); setMsgs(m=>[...m,{role:"user",text:q}]);
+    // phone → ticket
+    const phone=q.match(/\+?\d{10,15}/);
+    if(phone){
+      const res=await fetch("/api/ticket",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({phone:phone[0], request:"Chat request: "+msgs.slice(-2).map(x=>x.text).join(" | "), biz, conf})});
+      const data=await res.json(); setMsgs(m=>[...m,{role:"ai",text:data.message}]); return;
     }
-
-    // If asking for help, ask phone
-    if(q.toLowerCase().includes("help")||q.toLowerCase().includes("call")||q.toLowerCase().includes("quote")||q.toLowerCase().includes("damage")||q.toLowerCase().includes("inspection")){
-      setLastRequest(q);
-      const aiReply = await chatAI(q);
-      setMsgs(m=>[...m,{role:"ai", text: aiReply + "\n\n📱 To create ticket and notify owner of "+biz+", please share your phone number (WhatsApp). I'll send ticket # and WhatsApp confirmation."}]);
-      setPhoneMode(true);
-      return;
-    }
-
-    const reply = await chatAI(q);
-    setMsgs(m=>[...m,{role:"ai", text:reply}]);
+    const reply=await callOpenAI(q);
+    setMsgs(m=>[...m,{role:"ai",text:reply+"\n\n📱 Need a ticket? Send your WhatsApp number and I'll create Ticket + Owner of "+biz+" will be notified instantly."}]);
   };
 
   const tools=[
-    {id:"01", title:"LIVE DRONE SCAN", what:"Satellite measures 2,400 sq ft exact. Finds Section B 98% wear, 0 leaks.", how:"Tap SCAN → Gold laser sweeps blueprint → See wear map → Download PDF → Auto creates ticket if you want inspection.", func:"scan"},
-    {id:"02", title:"DAMAGE AI VISION", what:"Upload roof photo → AI draws red boxes 92% confidence → $1,240 estimate.", how:"Tap → Upload photo → AI marks wind lift → Shows estimate → Tap CREATE TICKET → Owner notified.", func:"upload"},
-    {id:"03", title:"INSTANT QUOTE ENGINE", what:"Live slider 1200-4000 sq ft → Price $6k-$20k updates live. Current $12,480 GAF HDZ.", how:"Tap → Move slider → Price live → Enter phone → Ticket VENUS-XXXX → Owner gets lead + you get WhatsApp quote.", func:"quote"},
-    {id:"04", title:"WEATHER SHIELD RADAR", what:"Live radar: Today 2% SAFE, Tomorrow 5% LOW, 7-Day 12% WATCH. Sells urgency.", how:"Tap → Radar spins → Shows 12% hail next week → Tap GET PROTECTION → Enter phone → Ticket created.", func:"radar"},
-    {id:"05", title:"WARRANTY VAULT", what:"GAF HDZ blockchain verified till Oct 2033 ROC AZR-208765 transferable.", how:"Tap → Gold verified stamp → Download PDF → Tap REQUEST WARRANTY CLAIM → Phone → Ticket → Owner notified.", func:"warranty"},
+    {id:"01", t:"LIVE DRONE SCAN", w:"Measures exact roof 2,400 sq ft from satellite, finds leaks, shows Section B 98% wear.", h:"Tap Launch → Watch laser scan blueprint → Download PDF report for customer.", c:"#00FF88"},
+    {id:"02", t:"DAMAGE AI VISION", w:"Upload any roof photo → AI draws red boxes around damage with 92% accuracy → $1,240 estimate.", h:"Tap → Upload photo → AI marks damage in 2 seconds → Shows proof to customer.", c:"#FF3B30"},
+    {id:"03", t:"INSTANT QUOTE ENGINE", w:"Live slider 1,200-4,000 sq ft → Price $6k-$20k updates instantly. Now $12,480 for GAF HDZ.", h:"Move slider → Pick material → Price live → Enter phone → Get ticket + WhatsApp quote.", c:"#D4AF37"},
+    {id:"04", t:"WEATHER SHIELD RADAR", w:"Live radar: Today 2% SAFE, Tomorrow 5% LOW, 7-Day 12% WATCH. Creates urgency to buy.", h:"Tap → See spinning radar → Use sales line '12% hail next week' → Get protection ticket.", c:"#0A84FF"},
+    {id:"05", t:"WARRANTY VAULT", w:"GAF HDZ blockchain verified till Oct 2033, ROC #AZR-208765, transferable to new homeowner.", h:"Tap → Gold verified stamp → Download PDF proof → Request claim with phone ticket.", c:"#D4AF37"},
   ];
 
-  const [sqft,setSqft]=useState(2400);
-  const [photo,setPhoto]=useState(null);
-
   return (
-    <div style={{minHeight:"100vh", background:"#080808", color:"white", fontFamily:"monospace", paddingBottom:"400px"}}>
-      <div style={{background:"#D4AF37", color:"black", textAlign:"center", padding:"8px", fontWeight:"900", fontSize:"10px"}}>● VENUS AI BUSINESS SYSTEM • {biz} • TICKET → WHATSAPP → OWNER NOTIFIED • CONF {conf}</div>
-      <div style={{maxWidth:"900px", margin:"0 auto", padding:"16px"}}>
-        <h1 style={{fontSize:"24px", fontWeight:"900"}}>5 AI TOOLS — FULLY FUNCTIONAL<br/><span style={{color:"#D4AF37"}}>TICKET + WHATSAPP + OWNER ALERT</span></h1>
-        <div style={{marginTop:"14px", display:"grid", gap:"10px"}}>
-          {tools.map(t=>(
-            <div key={t.id} style={{background:"#111", border:"1px solid #222", borderRadius:"16px", padding:"14px"}}>
-              <div style={{fontSize:"10px", color:"#D4AF37", fontWeight:"900"}}>{t.id} • {t.title}</div>
-              <div style={{fontSize:"11px", marginTop:"4px"}}><b>What:</b> {t.what}</div>
-              <div style={{fontSize:"11px", color:"#aaa", marginTop:"4px"}}><b>How:</b> {t.how}</div>
-              <button onClick={()=>setOpen(t)} style={{marginTop:"8px", background:"#D4AF37", color:"black", padding:"8px 14px", borderRadius:"999px", fontSize:"11px", fontWeight:"900", border:"0"}}>LAUNCH {t.title} →</button>
+    <div style={{minHeight:"100vh", background:"#070707", color:"white", fontFamily:"Inter, monospace"}}>
+      <div style={{background:"#D4AF37", color:"black", textAlign:"center", padding:"9px", fontWeight:"900", fontSize:"10px"}}>● {biz.toUpperCase()} • CONF {conf} • 5 AI TOOLS • PREMIUM ACTIVATED</div>
+      <div style={{maxWidth:"820px", margin:"0 auto", padding:"20px 16px 100px"}}>
+        <h1 style={{fontSize:"28px", fontWeight:"900", lineHeight:"1.1"}}>AI ROOFING<br/><span style={{color:"#D4AF37"}}>COMMAND CENTER</span></h1>
+        <p style={{color:"#666", fontSize:"12px", marginTop:"6px"}}>Tap any card to launch working AI. Chat is small circle bottom-right, won't hide tools.</p>
+        <div style={{marginTop:"18px", display:"grid", gap:"12px"}}>
+          {tools.map(x=>(
+            <div key={x.id} style={{background:"#111", border:"1px solid #1e1e1e", borderRadius:"18px", padding:"16px", display:"flex", justifyContent:"space-between", gap:"12px"}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:"10px", color:x.c, fontWeight:"900"}}>{x.id} • {x.t}</div>
+                <div style={{fontSize:"12px", marginTop:"6px", color:"#ccc"}}><span style={{color:"white", fontWeight:"700"}}>What:</span> {x.w}</div>
+                <div style={{fontSize:"11px", marginTop:"4px", color:"#D4AF37"}}><span style={{color:"#999"}}>How:</span> {x.h}</div>
+              </div>
+              <button onClick={()=>setOpen(x)} style={{alignSelf:"center", background:"white", color:"black", borderRadius:"999px", padding:"10px 14px", fontWeight:"900", fontSize:"11px", border:"0", whiteSpace:"nowrap"}}>LAUNCH →</button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* CHAT - REAL AI + PHONE → TICKET */}
-      <div style={{position:"fixed", bottom:"0", left:"0", right:"0", background:"#111", borderTop:"2px solid #D4AF37", maxWidth:"900px", margin:"0 auto", height:"340px", display:"flex", flexDirection:"column", zIndex:50}}>
-        <div style={{background:"#D4AF37", color:"black", padding:"8px 12px", fontWeight:"900", fontSize:"11px", display:"flex", justifyContent:"space-between"}}><span>VENUS AI • How can I assist you? • OpenAI Linked • Ticket System ON</span>{ticket&&<span style={{background:"black", color:"#D4AF37", padding:"2px 8px", borderRadius:"999px"}}>TICKET {ticket}</span>}</div>
-        <div ref={chatRef} style={{flex:1, overflow:"auto", padding:"10px", display:"flex", flexDirection:"column", gap:"8px"}}>
-          {msgs.map((m,i)=><div key={i} style={{fontSize:"11px", padding:"8px 12px", borderRadius:"12px", whiteSpace:"pre-wrap", background:m.role==="user"?"#D4AF37":"#1e1e1e", color:m.role==="user"?"black":"white", alignSelf:m.role==="user"?"flex-end":"flex-start", maxWidth:"85%"}}>{m.text}</div>)}
-        </div>
-        <div style={{padding:"8px", borderTop:"1px solid #222", display:"flex", gap:"6px"}}>
-          <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder={phoneMode?"Enter phone number for ticket + WhatsApp...":"Say Hi, ask price, damage, or request help..."} style={{flex:1, background:"#000", border:"1px solid #222", borderRadius:"999px", padding:"10px 12px", color:"white", fontSize:"11px"}}/>
-          <button onClick={send} style={{background:"#D4AF37", color:"black", padding:"0 16px", borderRadius:"999px", fontWeight:"900", border:"0"}}>{phoneMode?"CREATE TICKET":"SEND"}</button>
-        </div>
-      </div>
-
-      {open && (
-        <div style={{position:"fixed", inset:"0", background:"rgba(0,0,0,0.96)", zIndex:60, padding:"12px", overflow:"auto"}}>
-          <div style={{background:"#111", border:"1px solid #D4AF37", borderRadius:"20px", padding:"16px", maxWidth:"500px", margin:"20px auto"}}>
-            <div style={{display:"flex", justifyContent:"space-between"}}><b style={{color:"#D4AF37", fontSize:"12px"}}>{open.id} {open.title}</b><button onClick={()=>setOpen(null)} style={{background:"#222", color:"white", width:"28px", height:"28px", borderRadius:"999px", border:"0"}}>✕</button></div>
-            <div style={{fontSize:"11px", marginTop:"8px"}}>{open.what}</div>
-            <div style={{fontSize:"11px", color:"#D4AF37", marginTop:"6px"}}>{open.how}</div>
-
-            {open.func==="scan" && <div style={{marginTop:"12px", height:"120px", background:"#000", borderRadius:"12px", border:"1px solid #222", position:"relative", overflow:"hidden"}}><div style={{position:"absolute", top:"0", left:"0", width:"100%", height:"2px", background:"#D4AF37", animation:"scan 2s infinite linear"}}/><div style={{position:"absolute", bottom:"8px", left:"8px", fontSize:"10px", color:"#D4AF37"}}>2,400 SQ FT • B 98% WEAR • 0 LEAKS</div></div>}
-            {open.func==="upload" && <div style={{marginTop:"12px"}}><input type="file" onChange={e=>setPhoto(URL.createObjectURL(e.target.files[0]))} style={{fontSize:"11px"}}/><div style={{marginTop:"8px", background:"#000", height:"120px", borderRadius:"12px", display:"flex", alignItems:"center", justifyContent:"center", border:"1px dashed #333"}}>{photo?<img src={photo} style={{height:"110px", borderRadius:"8px"}}/>:"📸 Upload roof photo → AI detects damage"}</div>{photo&&<div style={{fontSize:"11px", marginTop:"6px", color:"#FF3B30"}}>🔴 Wind lift 92% • $1,240</div>}</div>}
-            {open.func==="quote" && <div style={{marginTop:"12px", background:"#000", padding:"12px", borderRadius:"12px"}}><div style={{display:"flex", justifyContent:"space-between", fontSize:"11px"}}><span>Sq Ft {sqft}</span><span style={{color:"#D4AF37"}}>${Math.round(sqft*5.2).toLocaleString()}</span></div><input type="range" min={1200} max={4000} value={sqft} onChange={e=>setSqft(+e.target.value)} style={{width:"100%"}}/><div style={{fontSize:"10px", color:"#666"}}>GAF HDZ + Labor + 10yr</div></div>}
-            {open.func==="radar" && <div style={{marginTop:"12px", height:"100px", background:"radial-gradient(circle,#0A84FF22,#000)", borderRadius:"12px", display:"flex", alignItems:"center", justifyContent:"center"}}><div style={{width:"60px", height:"60px", border:"3px solid #0A84FF", borderTopColor:"transparent", borderRadius:"50%", animation:"spin 1s linear infinite"}}/></div>}
-            {open.func==="warranty" && <div style={{marginTop:"12px", background:"#000", padding:"16px", borderRadius:"12px", textAlign:"center"}}><div>✓ VERIFIED</div><div style={{fontSize:"10px", color:"#D4AF37"}}>GAF HDZ Valid Oct 2033</div></div>}
-
-            <div style={{marginTop:"12px", display:"flex", gap:"8px"}}>
-              <input id="phoneInput" placeholder="Your WhatsApp number" style={{flex:1, background:"#000", border:"1px solid #222", borderRadius:"999px", padding:"10px", color:"white", fontSize:"11px"}}/>
-              <button onClick={()=>{ const ph=document.getElementById("phoneInput").value; if(ph){ sendTicket(ph, `${open.title} request - ${open.what}`); setOpen(null);} }} style={{background:"#D4AF37", color:"black", padding:"0 14px", borderRadius:"999px", fontWeight:"900", border:"0", fontSize:"11px"}}>GET TICKET + WHATSAPP</button>
-            </div>
-            <div style={{fontSize:"9px", color:"#666", marginTop:"6px"}}>Owner of {biz} will receive your request instantly. You get WhatsApp confirmation with ticket number.</div>
+      {/* SMALL CIRCLE - NOT COVERING */}
+      {!chatOpen? (
+        <button onClick={()=>setChatOpen(true)} style={{position:"fixed", bottom:"18px", right:"18px", width:"56px", height:"56px", borderRadius:"999px", background:"#D4AF37", color:"black", fontWeight:"900", border:"0", boxShadow:"0 8px 24px rgba(212,175,55,0.5)", zIndex:50}}>AI</button>
+      ):(
+        <div style={{position:"fixed", bottom:"18px", right:"18px", width:"320px", maxWidth:"92vw", height:"360px", background:"#111", border:"1px solid #D4AF37", borderRadius:"18px", zIndex:50, display:"flex", flexDirection:"column", overflow:"hidden"}}>
+          <div style={{background:"#D4AF37", color:"black", padding:"10px 14px", fontWeight:"900", fontSize:"11px", display:"flex", justifyContent:"space-between"}}><span>VENUS AI • How can I assist you?</span><button onClick={()=>setChatOpen(false)} style={{background:"black", color:"#D4AF37", width:"22px", height:"22px", borderRadius:"999px", border:"0"}}>✕</button></div>
+          <div ref={ref} style={{flex:1, overflow:"auto", padding:"10px", display:"flex", flexDirection:"column", gap:"8px"}}>
+            {msgs.map((m,i)=><div key={i} style={{fontSize:"11px", padding:"8px 12px", borderRadius:"12px", whiteSpace:"pre-wrap", background:m.role==="user"?"#D4AF37":"#1c1c1c", color:m.role==="user"?"black":"white", alignSelf:m.role==="user"?"flex-end":"flex-start", maxWidth:"85%"}}>{m.text}</div>)}
+          </div>
+          <div style={{padding:"8px", borderTop:"1px solid #222", display:"flex", gap:"6px"}}>
+            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Hi, how much cost?..." style={{flex:1, background:"#000", border:"1px solid #222", borderRadius:"999px", padding:"8px 12px", color:"white", fontSize:"11px"}}/>
+            <button onClick={send} style={{background:"#D4AF37", color:"black", padding:"0 14px", borderRadius:"999px", fontWeight:"900", border:"0", fontSize:"11px"}}>SEND</button>
           </div>
         </div>
       )}
-      <style>{`@keyframes scan{0%{transform:translateY(0)}100%{transform:translateY(120px)}} @keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+      {open && (
+        <div style={{position:"fixed", inset:"0", background:"rgba(0,0,0,0.96)", zIndex:60, padding:"16px", display:"flex", alignItems:"center", justifyContent:"center"}}>
+          <div style={{background:"#111", border:"1px solid #D4AF37", borderRadius:"18px", padding:"18px", maxWidth:"440px", width:"100%"}}>
+            <div style={{display:"flex", justifyContent:"space-between"}}><b style={{color:"#D4AF37", fontSize:"12px"}}>{open.id} {open.t}</b><button onClick={()=>setOpen(null)} style={{background:"#222", color:"white", width:"28px", height:"28px", borderRadius:"999px", border:"0"}}>✕</button></div>
+            <div style={{fontSize:"11px", marginTop:"8px"}}><b>What:</b> {open.w}</div>
+            <div style={{fontSize:"11px", color:"#D4AF37", marginTop:"6px"}}><b>How:</b> {open.h}</div>
+            {open.id==="03" && <div style={{marginTop:"12px", background:"#000", padding:"12px", borderRadius:"12px"}}><div style={{fontSize:"11px"}}>{sqft} sq ft = <span style={{color:"#D4AF37", fontWeight:"900"}}>${Math.round(sqft*5.2).toLocaleString()}</span></div><input type="range" min={1200} max={4000} value={sqft} onChange={e=>setSqft(+e.target.value)} style={{width:"100%"}}/></div>}
+            <div style={{marginTop:"12px", display:"flex", gap:"8px"}}>
+              <input id="ph" placeholder="WhatsApp for ticket" style={{flex:1, background:"#000", border:"1px solid #222", borderRadius:"999px", padding:"10px", color:"white", fontSize:"11px"}}/>
+              <button onClick={async()=>{ const v=document.getElementById("ph").value; if(!v) return; const r=await fetch("/api/ticket",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({phone:v, request:open.t+" request", biz, conf})}); const d=await r.json(); alert(d.message); setOpen(null); }} style={{background:"#D4AF37", color:"black", padding:"0 14px", borderRadius:"999px", fontWeight:"900", border:"0", fontSize:"11px"}}>TICKET + WHATSAPP</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
