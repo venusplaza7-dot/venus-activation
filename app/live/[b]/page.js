@@ -1,4 +1,4 @@
-mport { FACADE_CONFIG } from "../../lib/facades.js";
+import { FACADE_CONFIG } from "../../lib/facades.js";
 
 export default function LivePage({ params, searchParams }) {
   const domain = params.b;
