@@ -1,4 +1,3 @@
-// lib/facades.js - 5 facades, 5 tools per niche
 export const FACADE_CONFIG = {
   roofing: {
     name: "Gold Luxury", color: "#c19a4a", bg: "#0a0a0a",
@@ -51,5 +50,10 @@ export const FACADE_CONFIG = {
     ]
   },
 };
+
+
+
+
+
 
 
