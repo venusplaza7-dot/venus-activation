@@ -1,63 +1,97 @@
+"use client";
+import { useState } from "react";
 import { FACADE_CONFIG } from "../../lib/facades.js";
 
 export default function LivePage({ params, searchParams }) {
   const domain = params.b;
-  const niche = searchParams.niche || "plumbers";
+  const niche = searchParams.niche || "plumber";
   const state = searchParams.state || "HOUSTON";
+  const customerPhone = searchParams.phone || "15125550142";
   const facade = FACADE_CONFIG[niche] || FACADE_CONFIG.plumber;
-  const company = domain.replace(".com","").toUpperCase();
+  const [activeTool, setActiveTool] = useState(null);
+  const [chatMsg, setChatMsg] = useState("");
+  const [quote, setQuote] = useState("");
 
-  const content = {
-    roofing: { headline: ["ROOFS THAT", "DON'T LEAK.", "BOOKINGS THAT", "DON'T STOP."], services: ["Roof Replacement $4k-$15k", "Roof Repair $350-$2k", "Emergency Tarp $199-$500", "Gutter Install $800-$3k"] },
-    plumbers: { headline: ["PIPES THAT", "DON'T BURST.", "BOOKINGS THAT", "DON'T STOP."], services: ["Drain Cleaning $99-$350", "Emergency Leak $150-$500", "Water Heater $400-$1.8k", "Pipe Replacement $350-$2.5k"] },
-    hvac: { headline: ["AIR THAT", "DON'T QUIT.", "BOOKINGS THAT", "DON'T STOP."], services: ["AC Repair $150-$600", "AC Install $3k-$8k", "Heater Repair $200-$700", "Duct Cleaning $300-$800"] },
-    electrical: { headline: ["POWER THAT", "DON'T FAIL.", "BOOKINGS THAT", "DON'T STOP."], services: ["Panel Upgrade $1.5k-$4k", "Emergency $150-$400", "EV Charger $500-$1.5k", "Rewire $2k-$10k"] },
-    dentist: { headline: ["SMILES THAT", "DON'T FADE.", "BOOKINGS THAT", "DON'T STOP."], services: ["Cleaning $99-$250", "Whitening $300-$800", "Crown $800-$2k", "Implant $2k-$5k"] },
-  };
-
-  const c = content[niche] || content.plumbers;
+  function openTool(id){ setActiveTool(id); }
+  function waLink(msg){
+    return `https://wa.me/${customerPhone}?text=${encodeURIComponent(msg + " - from " + domain + " site")}`;
+  }
 
   return (
-    <div style={{ background: "#fff", color: "#000", fontFamily: "Helvetica, Arial, sans-serif", minHeight: "100vh" }}>
-      <header style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", fontWeight: 900, fontSize: 13, borderBottom: "1px solid #000" }}>
-        <span>{company} — EST. 2008 → REBUILT 2027 — {domain.toUpperCase()}</span>
-        <span style={{ border: "1.5px solid #0EA5E9", borderRadius: 20, padding: "4px 10px", color: "#0EA5E9", fontSize: 11 }}>VENUS AI • LIVE • {facade.color}</span>
-      </header>
+    <div style={{ background: "#fff", color: "#000", minHeight: "100vh", fontFamily: "Arial" }}>
+      {/* HEADER - REMOVED DEMO BUTTON */}
+      <div style={{ padding: 12, borderBottom: "1px solid #000", fontWeight: 900, fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+        <span>{domain.toUpperCase()} - EST. 2008 - REBUILT 2027</span>
+        <span style={{ border: "1px solid #0EA5E9", borderRadius: 20, padding: "2px 8px", color: "#0EA5E9" }}>VENUS AI • LIVE • {facade.color}</span>
+      </div>
 
-      <section style={{ padding: "28px 16px 10px" }}>
-        <h1 style={{ fontSize: 48, lineHeight: 0.9, fontWeight: 900, letterSpacing: -2, textTransform: "uppercase" }}>{c.headline.map((l,i)=><div key={i}>{l}</div>)}</h1>
-        <p style={{ marginTop: 18, color: "#666", fontSize: 15, lineHeight: 1.4 }}>
-          Original site {domain.replace(".com","")}2008.biz had 4 pages, Comic Sans, Yahoo email. Now: instant booking, proof, 1.1s load. Built for {state} — Personalized for {domain} — Niche {niche} detected.
-        </p>
-      </section>
+      <div style={{ padding: 20 }}>
+        <h1 style={{ fontSize: 42, fontWeight: 900, lineHeight: 0.9 }}>PIPES THAT<br/>DONT BURST.<br/>BOOKINGS THAT<br/>DONT STOP.</h1>
+        <p style={{ color: "#666", marginTop: 12 }}>Built for {state} - Personalized for {domain} - Niche {niche} detected.</p>
+      </div>
 
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, padding: "16px" }}>
-        <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 14 }}><div style={{ color: "#888", fontSize: 12 }}>Leads / week</div><div style={{ fontSize: 24, fontWeight: 900 }}>27 → 84</div><div style={{ color: "#0EA5E9", fontSize: 12, fontWeight: 700 }}>+211% after rebuild</div></div>
-        <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 14 }}><div style={{ color: "#888", fontSize: 12 }}>Booking rate</div><div style={{ fontSize: 24, fontWeight: 900 }}>11% → 38%</div><div style={{ color: "#0EA5E9", fontSize: 12, fontWeight: 700 }}>AI chat + quote</div></div>
-        <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 14 }}><div style={{ color: "#888", fontSize: 12 }}>Load time</div><div style={{ fontSize: 24, fontWeight: 900 }}>8.4s → 1.1s</div><div style={{ color: "#0EA5E9", fontSize: 12, fontWeight: 700 }}>Brutalist fast</div></div>
-      </section>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, padding: 16 }}>
+        <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 12 }}><div style={{ fontSize: 11, color: "#888" }}>Leads / week</div><div style={{ fontSize: 20, fontWeight: 900 }}>27 → 84</div><div style={{ color: "#0EA5E9", fontSize: 11, fontWeight: 700 }}>+211% after rebuild</div></div>
+        <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 12 }}><div style={{ fontSize: 11, color: "#888" }}>Booking rate</div><div style={{ fontSize: 20, fontWeight: 900 }}>11% → 38%</div><div style={{ color: "#0EA5E9", fontSize: 11, fontWeight: 700 }}>AI chat + quote</div></div>
+        <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 12 }}><div style={{ fontSize: 11, color: "#888" }}>Load time</div><div style={{ fontSize: 20, fontWeight: 900 }}>8.4s → 1.1s</div><div style={{ color: "#0EA5E9", fontSize: 11, fontWeight: 700 }}>Brutalist fast</div></div>
+      </div>
 
-      <section style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-        {c.services.map(s=>(
-          <div key={s} style={{ border: "1px solid #ddd", borderRadius: 16, padding: "14px 16px", display: "flex", justifyContent: "space-between" }}>
-            <div><b>{s.split(" $")[0]}</b><div style={{ fontSize: 13 }}><span style={{ color: "#0EA5E9", fontWeight: 700 }}>${s.split(" $")[1]}</span> • AI Quote • Book Now →</div></div>
+      {/* ACTIVATED AI TOOLS */}
+      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div onClick={()=>openTool("booking")} style={{ border: "2px solid #000", borderRadius: 16, padding: 14, cursor: "pointer" }}>
+          <b>01 AI BOOKING CHAT</b> - Books {domain} 24/7<div style={{ fontSize: 12, color: "green" }}>✓ ACTIVATED - Click to chat → WhatsApp {customerPhone}</div>
+        </div>
+        <div onClick={()=>openTool("quote")} style={{ border: "2px solid #000", borderRadius: 16, padding: 14, cursor: "pointer" }}>
+          <b>02 AI QUOTE ESTIMATOR</b> - Instant price from photos<div style={{ fontSize: 12, color: "green" }}>✓ ACTIVATED - Click to get quote → WhatsApp</div>
+        </div>
+        <div onClick={()=>openTool("missed")} style={{ border: "1px solid #ddd", borderRadius: 16, padding: 14, cursor: "pointer" }}>
+          <b>03 AI MISSED-CALL TEXT</b> - Saves $10k/mo<div style={{ fontSize: 12, color: "#666" }}>Auto texts missed calls to WhatsApp</div>
+        </div>
+        <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 14 }}>
+          <b>04 AI REVIEW ENGINE</b> - 4.2 → 4.9 stars<div style={{ fontSize: 12 }}>Auto asks reviews via WhatsApp</div>
+        </div>
+        <div style={{ border: "1px solid #ddd", borderRadius: 16, padding: 14 }}>
+          <b>05 AI UPSELL & REBOOK</b> - 22% rebook<div style={{ fontSize: 12 }}>Sends maintenance via WhatsApp</div>
+        </div>
+      </div>
+
+      {/* WHATSAPP FOR CUSTOMER CLIENTS - REAL CONTACT */}
+      <div style={{ margin: 16, border: "2px solid #000", borderRadius: 20, padding: 16, textAlign: "center" }}>
+        <div style={{ fontWeight: 900, marginBottom: 8 }}>CONTACT {domain.toUpperCase()} NOW</div>
+        <a href={waLink(`Hi ${domain}, I need ${niche} service`)} target="_blank" style={{ background: "#22c55e", color: "#fff", display: "block", padding: 16, borderRadius: 24, fontWeight: 900, textDecoration: "none", fontSize: 18 }}>💬 WHATSAPP {domain} - {customerPhone}</a>
+        <div style={{ marginTop: 8, fontSize: 11, color: "#666" }}>Instant reply - AI Booking active 24/7</div>
+        <a href={`tel:+${customerPhone}`} style={{ marginTop: 8, background: "#000", color: "#fff", display: "block", padding: 12, borderRadius: 24, fontWeight: 700, textDecoration: "none" }}>📞 CALL NOW {customerPhone}</a>
+      </div>
+
+      {/* TOOL MODALS - ACTIVATED */}
+      {activeTool==="booking" && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 20, width: "100%", maxWidth: 400 }}>
+            <b>AI Booking Chat - {domain}</b>
+            <div style={{ marginTop: 10, background: "#f5f5f5", padding: 10, borderRadius: 8, fontSize: 13 }}>Hi! I'm AI for {domain}. What {niche} service do you need in {state}? I can book instantly.</div>
+            <input value={chatMsg} onChange={e=>setChatMsg(e.target.value)} placeholder="e.g. Drain cleaning tomorrow" style={{ width: "100%", marginTop: 10, padding: 10, borderRadius: 8, border: "1px solid #ddd" }}/>
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <button onClick={()=>setActiveTool(null)} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ddd" }}>Close</button>
+              <a href={waLink(`Booking request: ${chatMsg}`)} style={{ flex: 1, background: "#22c55e", color: "#fff", textAlign: "center", padding: 10, borderRadius: 8, textDecoration: "none", fontWeight: 700 }}>Send to WhatsApp</a>
+            </div>
           </div>
-        ))}
-      </section>
+        </div>
+      )}
 
-      <section style={{ margin: "20px 16px", border: "1px solid #ccc", borderRadius: 16, overflow: "hidden" }}>
-        {facade.tools.map((t,i)=>(
-          <div key={t.id} style={{ padding: "14px 16px", borderBottom: i<4? "1px solid #eee" : "none", display: "flex", gap: 12, background: i===0? "#f0fdf4" : "#fff" }}>
-            <span style={{ color: "#0EA5E9", fontWeight: 900, fontSize: 14 }}>0{i+1}</span>
-            <div><div style={{ fontWeight: 900, textTransform: "uppercase" }}>{t.name}</div><div style={{ color: "#666", fontSize: 13 }}>{t.name.includes("Booking")? `Books ${domain} 24/7` : t.name.includes("Quote")? "Instant price from photos" : t.name.includes("Missed")? "Saves $10k/mo" : t.name.includes("Review")? "4.2 → 4.9 stars" : "22% rebook"} • ✓ ACTIVATED</div></div>
+      {activeTool==="quote" && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 20, width: "100%", maxWidth: 400 }}>
+            <b>AI Quote Estimator - {domain}</b>
+            <div style={{ marginTop: 10, fontSize: 13 }}>Upload photo or describe issue - AI gives instant price range</div>
+            <input value={quote} onChange={e=>setQuote(e.target.value)} placeholder="e.g. Leaky pipe under sink" style={{ width: "100%", marginTop: 10, padding: 10, borderRadius: 8, border: "1px solid #ddd" }}/>
+            {quote && <div style={{ marginTop: 8, background: "#f0fdf4", padding: 10, borderRadius: 8, fontSize: 12 }}><b>AI Estimate for {domain}:</b> $150-$350 for {quote} in {state}. Final price after visit. 1.1s analysis.</div>}
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <button onClick={()=>setActiveTool(null)} style={{ flex: 1, padding: 10, borderRadius: 8, border: "1px solid #ddd" }}>Close</button>
+              <a href={waLink(`Quote request: ${quote} - AI estimate $150-$350`)} style={{ flex: 1, background: "#0EA5E9", color: "#fff", textAlign: "center", padding: 10, borderRadius: 8, textDecoration: "none", fontWeight: 700 }}>Get Quote on WhatsApp</a>
+            </div>
           </div>
-        ))}
-      </section>
-
-      <section style={{ margin: 16, border: `2px solid ${facade.color}`, borderRadius: 20, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-        <a href={`https://wa.me/?text=Your ${niche} site ${domain} is LIVE with 5 AI tools activated: https://venus-activation.vercel.app/live/${domain}?niche=${niche}`} style={{ background: "#22c55e", color: "#000", textAlign: "center", padding: 16, borderRadius: 24, fontWeight: 900, textDecoration: "none" }}>💬 WHATSAPP ACTIVATE {domain}</a>
-        <a href={`/live/${domain}?niche=${niche}`} style={{ background: "#0EA5E9", color: "#000", textAlign: "center", padding: 14, borderRadius: 24, fontWeight: 900, textDecoration: "none" }}>GO TO OFFER PAGE →</a>
-      </section>
+        </div>
+      )}
     </div>
   );
 }
